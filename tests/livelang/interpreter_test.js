@@ -104,11 +104,11 @@ describe('Interpreter', function() {
     var expected = ast.Block([
       ast.Assignment(
         'a',
-        ast.Closure(['x'], ast.BinaryOp('*', ast.Variable('x'), ast.Num(2)))
+        ast.Lambda(['x'], ast.BinaryOp('*', ast.Variable('x'), ast.Num(2)))
       ),
       ast.Assignment(
         'b',
-        ast.Closure(
+        ast.Lambda(
           ['x', 'y'],
           ast.BinaryOp('+', ast.Variable('x'), ast.Variable('y'))
         )

@@ -56,9 +56,9 @@ Ast.Node.If = function(predicate, ifBlock, elseBlock) {
  *  body:      Block
  *  inlinable: Boolean
  */
-Ast.Node.Closure = function(argNames, body, inlinable) {
+Ast.Node.Lambda = function(argNames, body, inlinable) {
   return {
-    ast: 'CLOSURE',
+    ast: 'LAMBDA',
     argNames: argNames,
     body: body,
     inlinable: inlinable || false

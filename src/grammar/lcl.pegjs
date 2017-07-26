@@ -83,7 +83,7 @@ Statement "statement"
 
 Assignment "assignment"
   = id:Identifier _ "=" _ expr:Expression {
-      if (expr.ast === "CLOSURE") {
+      if (expr.ast === "LAMBDA") {
           functionNames.push(id);
           if (expr.inlinable) {
             inlinableFunctions.push(id);
@@ -347,7 +347,7 @@ List "list"
 Lambda "lambda"
   = LazyLambda
   / "(" _ params:ParamList? _ ")" _ ("->" / "=>") _ body:LambdaBody {
-      return Ast.Node.Closure(optionalList(params), body, false);
+      return Ast.Node.Lambda(optionalList(params), body, false);
   }
 
 LambdaBody
@@ -358,7 +358,7 @@ LambdaBody
 
 LazyLambda "lazy"
   = "<" _ lazy:Application _ ">" {
-      return Ast.Node.Closure([], Ast.Node.Block([lazy]), true);
+      return Ast.Node.Lambda([], Ast.Node.Block([lazy]), true);
   }
 
 ParamList "param list"

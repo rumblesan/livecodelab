@@ -15,11 +15,7 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
-          ['a'],
-          ast.BinaryOp('+', ast.Variable('a'), ast.Num(1)),
-          false
-        )
+        ast.Lambda(['a'], ast.BinaryOp('+', ast.Variable('a'), ast.Num(1)))
       )
     ]);
 
@@ -35,10 +31,9 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           ['a', 'b'],
-          ast.BinaryOp('+', ast.Variable('a'), ast.Variable('b')),
-          false
+          ast.BinaryOp('+', ast.Variable('a'), ast.Variable('b'))
         )
       )
     ]);
@@ -60,10 +55,9 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           [],
-          ast.BinaryOp('*', ast.Num(255), ast.Application('random', [], null)),
-          false
+          ast.BinaryOp('*', ast.Num(255), ast.Application('random', [], null))
         )
       ),
       ast.Application('fill', [ast.Application('foo', [])], null),
@@ -111,7 +105,7 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'bar',
-        ast.Closure(
+        ast.Lambda(
           ['a', 'b'],
           ast.Block([
             ast.Assignment(
@@ -119,8 +113,7 @@ describe('Function', function() {
               ast.BinaryOp('+', ast.Variable('a'), ast.Variable('b'))
             ),
             ast.Application('box', [ast.Variable('c'), ast.Num(3)], null)
-          ]),
-          false
+          ])
         )
       )
     ]);
@@ -144,7 +137,7 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'bar',
-        ast.Closure(
+        ast.Lambda(
           ['a', 'b'],
           ast.Block([
             ast.If(
@@ -155,8 +148,7 @@ describe('Function', function() {
                 ast.Block([ast.Application('box', [ast.Variable('b')], null)])
               )
             )
-          ]),
-          false
+          ])
         )
       )
     ]);
@@ -174,11 +166,7 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
-          ['a'],
-          ast.BinaryOp('+', ast.Variable('a'), ast.Num(3)),
-          false
-        )
+        ast.Lambda(['a'], ast.BinaryOp('+', ast.Variable('a'), ast.Num(3)))
       ),
       ast.Assignment(
         'bar',
@@ -209,10 +197,9 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           ['a', 'b'],
-          ast.BinaryOp('+', ast.Variable('a'), ast.Variable('b')),
-          false
+          ast.BinaryOp('+', ast.Variable('a'), ast.Variable('b'))
         )
       ),
       ast.Assignment(
@@ -240,7 +227,7 @@ describe('Function', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           ['x', 'y', 'j', 'z'],
           ast.BinaryOp(
             '*',
@@ -284,8 +271,7 @@ describe('Function', function() {
               ),
               ast.Num(0.5)
             )
-          ),
-          false
+          )
         )
       )
     ]);

@@ -8,7 +8,7 @@ var dedent = require('dentist').dedent;
 var assert = require('assert');
 
 describe('Lazy Lambda', function() {
-  it('lazy closure is parsed', function() {
+  it('lazy lambda is parsed', function() {
     var program = 'foo = <box 3, 4>';
     var parsed = parser.parse(program, {
       functionNames: ['box'],
@@ -18,7 +18,7 @@ describe('Lazy Lambda', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           [],
           ast.Block([ast.Application('box', [ast.Num(3), ast.Num(4)], null)]),
           true
@@ -29,7 +29,7 @@ describe('Lazy Lambda', function() {
     assert.deepEqual(parsed, expected);
   });
 
-  it('lazy closure is created and used', function() {
+  it('lazy lambda is created and used', function() {
     var program = dedent(`
                          foo = <box 3, 4>
                          rotate
@@ -43,7 +43,7 @@ describe('Lazy Lambda', function() {
     var expected = ast.Block([
       ast.Assignment(
         'foo',
-        ast.Closure(
+        ast.Lambda(
           [],
           ast.Block([ast.Application('box', [ast.Num(3), ast.Num(4)], null)]),
           true
@@ -59,7 +59,7 @@ describe('Lazy Lambda', function() {
     assert.deepEqual(parsed, expected);
   });
 
-  it('lazy closure is inlinable', function() {
+  it('lazy lambda is inlinable', function() {
     var program = dedent(`
                          bigger = <scale 1.1>
                          rotate bigger box
@@ -72,7 +72,7 @@ describe('Lazy Lambda', function() {
     var expected = ast.Block([
       ast.Assignment(
         'bigger',
-        ast.Closure(
+        ast.Lambda(
           [],
           ast.Block([ast.Application('scale', [ast.Num(1.1)], null)]),
           true

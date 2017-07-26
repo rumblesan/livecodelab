@@ -40,8 +40,8 @@ internal.evaluate = function(state, node, scope) {
       output = internal.evaluateIf(state, node, scope);
       break;
 
-    case 'CLOSURE':
-      output = internal.evaluateClosure(state, node, scope);
+    case 'LAMBDA':
+      output = internal.evaluateLambda(state, node, scope);
       break;
 
     case 'TIMES':
@@ -108,7 +108,7 @@ internal.evaluateAssignment = function(state, assignment, scope) {
 };
 
 internal.evaluateApplication = function(state, application, scope) {
-  var func, barefunc, funcname, args, evaledargs, output, i, block;
+  var args, func, childScope, funcname, evaledargs, output, i, block;
 
   funcname = application.identifier;
 
@@ -117,13 +117,9 @@ internal.evaluateApplication = function(state, application, scope) {
     throw 'Function not defined: ' + funcname;
   }
 
-  evaledargs = [];
-
-  args = application.args;
-
-  for (i = 0; i < args.length; i += 1) {
-    evaledargs.push(internal.evaluate(state, args[i], scope));
-  }
+  evaledargs = application.args.map(function(arg) {
+    return internal.evaluate(state, arg, scope);
+  });
 
   // if this function call has a block section then add it to the args
   block = application.block;
@@ -134,7 +130,7 @@ internal.evaluateApplication = function(state, application, scope) {
   }
 
   // functions are wrapped in an object with a function type
-  // to differentiate between builtins and closures
+  // to differentiate between builtins and lambdas
   // user defined functions will be wrapped in a list so we unwrap them then call them
   if (func.type === 'builtin') {
     // apply is a method of the JS function object. it takes a scope
@@ -150,12 +146,13 @@ internal.evaluateApplication = function(state, application, scope) {
     // bar will equal 5
 
     output = func.func.apply(scope, evaledargs);
-  } else if (func.type === 'closure') {
-    // Functions defined by the user are wrapped in a list, so we need
-    // to unwrap them
-    // Also we don't pass the scope in because everything is created
-    // as a closure
-    output = func.func(evaledargs);
+  } else if (func.type === 'lambda') {
+    args = func.lambda.argNames;
+    childScope = helpers.createChildScope(scope);
+    for (i = 0; i < args.length; i += 1) {
+      childScope[args[i]] = evaledargs[i];
+    }
+    output = internal.evaluate(state, func.lambda.body, childScope);
   } else {
     throw 'Error interpreting function: ' + funcname;
   }
@@ -177,26 +174,10 @@ internal.evaluateIf = function(state, ifStatement, scope) {
   }
 };
 
-internal.evaluateClosure = function(state, closure, scope) {
-  var argnames, body, func;
-  argnames = closure.argNames;
-  body = closure.body;
-
-  func = function(argvalues) {
-    var i, childScope, output;
-    childScope = helpers.createChildScope(scope);
-    for (i = 0; i < argnames.length; i += 1) {
-      childScope[argnames[i]] = argvalues[i];
-    }
-    output = internal.evaluate(state, body, childScope);
-    return output;
-  };
-
-  // Return the function wrapped in an object with the function
-  // type set to be closure
+internal.evaluateLambda = function(state, lambda, scope) {
   return {
-    type: 'closure',
-    func: func
+    type: 'lambda',
+    lambda: lambda
   };
 };
 
