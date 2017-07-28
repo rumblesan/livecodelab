@@ -1,7 +1,7 @@
 /* global describe, it */
 
 var parser = require('../../src/grammar/lcl');
-var ast = require('../../src/js/lcl/ast').Node;
+import * as ast from '../../src/js/lcl/ast';
 
 var assert = require('assert');
 

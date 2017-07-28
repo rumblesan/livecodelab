@@ -48,7 +48,7 @@
 
 Program
   = NewLine* elements:SourceElements? NewLine* EOF {
-      return Ast.Node.Block(optionalList(elements, 0));
+      return Ast.Block(optionalList(elements, 0));
   }
 
 SourceElements "elements"
@@ -67,7 +67,7 @@ SourceElement "elements"
 
 Block "block"
   = Indent elements:SourceElements Dedent {
-      return Ast.Node.Block(elements);
+      return Ast.Block(elements);
   }
 
 /** Base statements
@@ -89,7 +89,7 @@ Assignment "assignment"
             inlinableFunctions.push(id);
           }
       }
-      return Ast.Node.Assignment(id, expr);
+      return Ast.Assignment(id, expr);
   }
 
 /** Application Rules
@@ -103,7 +103,7 @@ Application "application"
 SimpleApplication "simple application"
   = name:FunctionName _ args:ArgumentList? {
       var argList =  optionalList(args, 0);
-      return Ast.Node.Application(name, argList, null);
+      return Ast.Application(name, argList, null);
   }
 
 FullApplication
@@ -114,7 +114,7 @@ FullApplication
         argList = body.argList;
         block = body.block;
       }
-      return Ast.Node.Application(name, argList, block);
+      return Ast.Application(name, argList, block);
   }
 
 ApplicationBody
@@ -136,7 +136,7 @@ ApplicationBlock
       return block;
   }
   / ">>"? _ inlined:Inlinable {
-      return Ast.Node.Block([inlined]);
+      return Ast.Block([inlined]);
   }
 
 Inlinable
@@ -145,7 +145,7 @@ Inlinable
 
 InlinedApplication
   = name:InlinableFunction _ body:ApplicationBody {
-      return Ast.Node.Application(name, body.argList, body.block);
+      return Ast.Application(name, body.argList, body.block);
   }
 
 ArgumentList
@@ -176,20 +176,20 @@ InlinableFunction
 
 If "if"
   = "if" _ predicate:Expression _ NewLine ifBlock:Block elseBlock:(Else)? {
-      return Ast.Node.If(predicate, ifBlock, elseBlock);
+      return Ast.If(predicate, ifBlock, elseBlock);
   }
   / "if" _ predicate:Expression _ NewLine ifBlock:Block {
-      return Ast.Node.If(predicate, ifBlock, null);
+      return Ast.If(predicate, ifBlock, null);
   }
   / "if" _ predicate:Expression _ "then" _ ifAction:Statement _ "else" _ elseAction:Statement {
-      return Ast.Node.If(
+      return Ast.If(
         predicate,
-        Ast.Node.Block([ifAction]),
-        Ast.Node.Block([elseAction])
+        Ast.Block([ifAction]),
+        Ast.Block([elseAction])
       );
   }
   / "if" _ predicate:Expression _ "then" _ ifAction:Statement {
-      return Ast.Node.If(predicate, Ast.Node.Block([ifAction]), null);
+      return Ast.If(predicate, Ast.Block([ifAction]), null);
   }
 
 Else "else"
@@ -197,7 +197,7 @@ Else "else"
       return ifBlock;
   }
   / NewLine Samedent "else" _ NewLine block:Block {
-      return Ast.Node.If(Ast.Node.Num(1), block);
+      return Ast.If(Ast.Num(1), block);
   }
 
 /** Times Loop Rules
@@ -206,7 +206,7 @@ Else "else"
 
 TimesLoop "times"
   = expr:Expression _ "times" loopVar:LoopVar? _ block:TimesLoopBlock {
-      return Ast.Node.Times(expr, block, loopVar);
+      return Ast.Times(expr, block, loopVar);
   }
 
 TimesLoopBlock
@@ -214,7 +214,7 @@ TimesLoopBlock
       return block;
   }
   / ">>"? _ inlined:Inlinable {
-      return Ast.Node.Block([inlined]);
+      return Ast.Block([inlined]);
   }
 
 LoopVar
@@ -238,13 +238,13 @@ FinishedDoOnce "finished do once"
 
 ActiveDoOnce "active do once"
   = "doOnce" _ NewLine block:Block {
-      return Ast.Node.DoOnce(true, block);
+      return Ast.DoOnce(true, block);
   }
   / "doOnce" _ appl:FullApplication {
-      return Ast.Node.DoOnce(true, Ast.Node.Block([appl]));
+      return Ast.DoOnce(true, Ast.Block([appl]));
   }
   / "doOnce" _ expr:Expression {
-      return Ast.Node.DoOnce(true, Ast.Node.Block([expr]));
+      return Ast.DoOnce(true, Ast.Block([expr]));
   }
 
 /** Expression Rules
@@ -256,32 +256,32 @@ Expression
 
 LogicCombi "logicCombinator"
   = head:LogicExpr tail:( _ ("&&" / "||") _ LogicExpr)* {
-      return collapseTail(head, tail, Ast.Node.BinaryOp);
+      return collapseTail(head, tail, Ast.BinaryOp);
   }
 
 LogicExpr "logicExpr"
   = head:AddSub tail:( _ (">=" / "<=" / "==" / ">" / "<") _ AddSub)* {
-      return collapseTail(head, tail, Ast.Node.BinaryOp);
+      return collapseTail(head, tail, Ast.BinaryOp);
   }
 
 UnaryLogicExpr "unaryLogicExpr"
   = "!" _ expr:AddSub {
-      return Ast.Node.UnaryOp("!", expr);
+      return Ast.UnaryOp("!", expr);
   }
 
 AddSub "addsub"
   = head:Factor tail:( _ ("+" / "-") _ Factor)* {
-      return collapseTail(head, tail, Ast.Node.BinaryOp);
+      return collapseTail(head, tail, Ast.BinaryOp);
   }
 
 Factor "factor"
   = head:Exponent tail:( _ ("*" / "/" / "%") _ Exponent)* {
-      return collapseTail(head, tail, Ast.Node.BinaryOp);
+      return collapseTail(head, tail, Ast.BinaryOp);
   }
 
 Exponent "exponent"
   = head:Primary tail:( _ "^" _ Primary)* {
-      return collapseTail(head, tail, Ast.Node.BinaryOp);
+      return collapseTail(head, tail, Ast.BinaryOp);
   }
 
 Primary
@@ -293,7 +293,7 @@ Primary
 
 NegativeExpr
   = "-" _ base:Base {
-      return Ast.Node.UnaryOp('-', base);
+      return Ast.UnaryOp('-', base);
   }
 
 Base
@@ -309,12 +309,12 @@ Variable "variable"
     var isKeyword = (keywords.indexOf(id) !== -1);
     return !isInlinable && !isKeyword;
   } {
-    return Ast.Node.Variable(id);
+    return Ast.Variable(id);
   }
 
 DeIndex "deindex"
   = collection:Base "[" index:Expression "]" {
-    return Ast.Node.DeIndex(collection, index);
+    return Ast.DeIndex(collection, index);
   }
 
 Identifier
@@ -327,27 +327,27 @@ Identifier
 
 Num "number"
   = [0-9]+('.'[0-9]+)? {
-      return Ast.Node.Num(Number(text()));
+      return Ast.Num(Number(text()));
   }
 
 String "string"
   = "'" chars:([^\n\r\f'])* "'" {
-      return Ast.Node.Str(chars.join(''));
+      return Ast.Str(chars.join(''));
   }
   / "\"" chars:([^\n\r\f\"])* "\"" {
-      return Ast.Node.Str(chars.join(''));
+      return Ast.Str(chars.join(''));
   }
 
 List "list"
   = "[" valList:ArgumentList? "]" {
       var values =  optionalList(valList, 0);
-      return Ast.Node.List(values);
+      return Ast.List(values);
   }
 
 Lambda "lambda"
   = LazyLambda
   / "(" _ params:ParamList? _ ")" _ ("->" / "=>") _ body:LambdaBody {
-      return Ast.Node.Lambda(optionalList(params), body, false);
+      return Ast.Lambda(optionalList(params), body, false);
   }
 
 LambdaBody
@@ -358,7 +358,7 @@ LambdaBody
 
 LazyLambda "lazy"
   = "<" _ lazy:Application _ ">" {
-      return Ast.Node.Lambda([], Ast.Node.Block([lazy]), true);
+      return Ast.Lambda([], Ast.Block([lazy]), true);
   }
 
 ParamList "param list"
@@ -402,7 +402,7 @@ Dedent
 
 Comment
   = "//" [^\n]* {
-    return Ast.Node.Comment();
+    return Ast.Comment();
   }
 
 NewLine

@@ -2,7 +2,7 @@
 
 var Interpreter = require('../../src/js/lcl/interpreter');
 var parser = require('../../src/grammar/lcl');
-var ast = require('../../src/js/lcl/ast').Node;
+import * as ast from '../../src/js/lcl/ast';
 
 var dedent = require('dentist').dedent;
 

@@ -1,11 +1,11 @@
-var helpers = require('./interpreter-funcs');
-var _ = require('underscore');
+import * as helpers from './interpreter-funcs';
+import _ from 'underscore';
 
 var Interpreter = {};
-var internal = {};
+export const internal = {};
 Interpreter.internal = internal;
 
-Interpreter.run = function(programBlock, globalscope) {
+export const run = function(programBlock, globalscope) {
   var state = {
     exitCode: 0,
     doOnceTriggered: false
@@ -174,7 +174,7 @@ internal.evaluateIf = function(state, ifStatement, scope) {
   }
 };
 
-internal.evaluateLambda = function(state, lambda, scope) {
+internal.evaluateLambda = function(state, lambda) {
   return {
     type: 'lambda',
     lambda: lambda
@@ -311,5 +311,3 @@ internal.evaluateDeIndex = function(state, deindex, scope) {
   var output = collection[index];
   return output;
 };
-
-module.exports = Interpreter;
