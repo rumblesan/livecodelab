@@ -171,3 +171,12 @@ export const Comment = function() {
     ast: 'COMMENT'
   };
 };
+
+/**
+ *  NULL node used during transformations
+ */
+export const Null = function() {
+  return {
+    ast: 'NULL'
+  };
+};
