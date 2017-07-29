@@ -1,11 +1,7 @@
-var funcs = {};
-
-funcs.exists = function(val) {
+export function exists(val) {
   return val !== undefined && val !== null;
-};
+}
 
-funcs.createChildScope = function(parentScope) {
+export function createChildScope(parentScope) {
   return Object.create(parentScope);
-};
-
-module.exports = funcs;
+}
