@@ -24,12 +24,13 @@ export const Assignment = function(identifier, expression) {
  *  identifier: Identifier
  *  args:       [Expression]
  */
-export const Application = function(identifier, args, block) {
+export const Application = function(identifier, args, block, cache = null) {
   return {
     ast: 'APPLICATION',
     identifier: identifier,
     args: args,
-    block: block
+    block: block,
+    cache: cache
   };
 };
 
