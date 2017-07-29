@@ -77,9 +77,9 @@ export const deadCodeEliminator = ast =>
     },
     TIMES: ast => {
       const number = deadCodeEliminator(ast.number);
-      const body = deadCodeEliminator(ast.body);
-      if (isNull(number) && isNull(body)) return Null();
-      return Times(number, body, ast.loopVar);
+      const block = deadCodeEliminator(ast.block);
+      if (isNull(number) || isNull(block)) return Null();
+      return Times(number, block, ast.loopVar);
     },
     DOONCE: ast => {
       if (!ast.active) return Null();

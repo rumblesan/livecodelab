@@ -8,6 +8,7 @@ import {
   Application,
   BinaryOp,
   Num,
+  Times,
   Variable,
   Lambda,
   Null
@@ -145,6 +146,38 @@ describe('Optimiser', function() {
           null,
           Lambda(['a'], BinaryOp('*', Num(255), Variable('a')))
         )
+      )
+    ]);
+
+    assert.deepEqual(parsed, initialAst);
+    assert.deepEqual(inlinedAst, expectedInlined);
+  });
+
+  it('optimise loop', function() {
+    const program = dedent(`
+                           foo = (a) => 255 * a
+                           10 times
+                           \tfoo 1
+                           `);
+    const parsed = parse(program);
+    const initialAst = Block([
+      Assignment('foo', Lambda(['a'], BinaryOp('*', Num(255), Variable('a')))),
+      Times(Num(10), Block([Application('foo', [Num(1)], null)]), null)
+    ]);
+
+    const inlinedAst = deadCodeEliminator(functionInliner(parsed, {}));
+    const expectedInlined = Block([
+      Times(
+        Num(10),
+        Block([
+          Application(
+            'foo',
+            [Num(1)],
+            null,
+            Lambda(['a'], BinaryOp('*', Num(255), Variable('a')))
+          )
+        ]),
+        null
       )
     ]);
 
