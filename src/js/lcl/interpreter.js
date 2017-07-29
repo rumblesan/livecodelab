@@ -108,13 +108,24 @@ internal.evaluateAssignment = function(state, assignment, scope) {
 };
 
 internal.evaluateApplication = function(state, application, scope) {
-  var args, func, childScope, funcname, evaledargs, output, i, block;
+  var args, childScope, funcname, evaledargs, output, i, block;
 
-  funcname = application.identifier;
+  let func;
+  if (application.cache) {
+    func = application.cache;
+    if (func.ast === 'LAMBDA') {
+      func = {
+        type: 'lambda',
+        lambda: application.cache
+      };
+    }
+  } else {
+    funcname = application.identifier;
 
-  func = scope[funcname];
-  if (!helpers.exists(func)) {
-    throw 'Function not defined: ' + funcname;
+    func = scope[funcname];
+    if (!helpers.exists(func)) {
+      throw 'Function not defined: ' + funcname;
+    }
   }
 
   evaledargs = application.args.map(function(arg) {

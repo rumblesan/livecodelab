@@ -4,6 +4,7 @@
 ###
 
 Parser = require '../../grammar/lcl'
+Optimiser = require '../../js/lcl/interpreter-optimiser'
 
 class V2CodeCompiler
 
@@ -23,13 +24,26 @@ class V2CodeCompiler
     output = {}
 
     try
-      programAST = @parser.parse(
+      ast = @parser.parse(
         code,
         {
           functionNames: globalscope.getFunctions(),
           inlinableFunctions: globalscope.getInlinables()
         }
       )
+      if (ast)
+        scope = globalscope.getScope()
+        console.log('scope', scope)
+        programAST = Optimiser.deadCodeEliminator(
+          Optimiser.functionInliner(
+            ast, scope
+          )
+        )
+        console.log(programAST);
+      else
+        programAST = {
+          elements: []
+        }
     catch e
       # parser has caught a syntax error.
       # we are going to display the error and we WON'T register the new code
@@ -37,7 +51,7 @@ class V2CodeCompiler
       output.error = e
       return output
 
-    if (programAST.elements.length == 0)
+    if (programAST.ast == 'NULL')
       output.status = 'empty'
     else
       output.status = 'parsed'
