@@ -18,18 +18,18 @@ import { createChildScope } from './interpreter-funcs';
 
 export const astCopy = ast => astTransform(ast);
 
-export const functionInliner = (ast, state = {}) => {
+export const functionCacher = (ast, state = {}) => {
   return astTransform(
     ast,
     {
       BLOCK: ast => {
         const childFunctionScope = createChildScope(state);
         return Block(
-          ast.elements.map(el => functionInliner(el, childFunctionScope))
+          ast.elements.map(el => functionCacher(el, childFunctionScope))
         );
       },
       ASSIGNMENT: ast => {
-        const expr = functionInliner(ast.expression, state);
+        const expr = functionCacher(ast.expression, state);
         if (expr.ast === 'LAMBDA') {
           state[ast.identifier] = expr;
           return Null();
@@ -42,8 +42,8 @@ export const functionInliner = (ast, state = {}) => {
           : ast.cache;
         return Application(
           ast.identifier,
-          ast.args.map(arg => functionInliner(arg, state)),
-          ast.block ? functionInliner(ast.block, state) : ast.block,
+          ast.args.map(arg => functionCacher(arg, state)),
+          ast.block ? functionCacher(ast.block, state) : ast.block,
           cache
         );
       }
@@ -68,7 +68,7 @@ export const deadCodeEliminator = ast =>
       const newIf = deadCodeEliminator(ast.IfBlock);
       const newElse = deadCodeEliminator(ast.elseBlock);
       if (isNull(newIf) && isNull(newElse)) return Null();
-      return If(functionInliner(ast.predicate), newIf, newElse);
+      return If(functionCacher(ast.predicate), newIf, newElse);
     },
     LAMBDA: ast => {
       const body = deadCodeEliminator(ast.body);

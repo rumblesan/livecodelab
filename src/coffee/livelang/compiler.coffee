@@ -35,7 +35,7 @@ class V2CodeCompiler
         scope = globalscope.getScope()
         console.log('scope', scope)
         programAST = Optimiser.deadCodeEliminator(
-          Optimiser.functionInliner(
+          Optimiser.functionCacher(
             ast, scope
           )
         )

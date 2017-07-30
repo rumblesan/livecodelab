@@ -20,7 +20,7 @@ import * as assert from 'assert';
 
 import {
   astCopy,
-  functionInliner,
+  functionCacher,
   deadCodeEliminator
 } from '../../src/js/lcl/interpreter-optimiser';
 
@@ -51,7 +51,7 @@ describe('Optimiser', function() {
                            `);
 
     const parsed = parse(program);
-    const inlinedAst = functionInliner(parsed, {});
+    const inlinedAst = functionCacher(parsed, {});
 
     const initialAst = Block([
       Assignment('foo', Lambda(['a'], Variable('a'))),
@@ -115,7 +115,7 @@ describe('Optimiser', function() {
       Assignment('bin', Application('foo', [Num(2)], null))
     ]);
 
-    const inlinedAst = deadCodeEliminator(functionInliner(parsed, {}));
+    const inlinedAst = deadCodeEliminator(functionCacher(parsed, {}));
     const expectedInlined = Block([
       Assignment(
         'baz',
@@ -165,7 +165,7 @@ describe('Optimiser', function() {
       Times(Num(10), Block([Application('foo', [Num(1)], null)]), null)
     ]);
 
-    const inlinedAst = deadCodeEliminator(functionInliner(parsed, {}));
+    const inlinedAst = deadCodeEliminator(functionCacher(parsed, {}));
     const expectedInlined = Block([
       Times(
         Num(10),
