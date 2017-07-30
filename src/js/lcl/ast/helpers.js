@@ -12,75 +12,136 @@ import {
   DeIndex
 } from './index';
 
-export const mapMaybe = (ast, func) => {
-  if (ast) {
-    return astMap(ast, func);
-  }
-  return ast;
-};
-
 export const isNull = ast => ast.ast === 'NULL';
 export const notNull = ast => ast.ast !== 'NULL';
 
-export const astMap = (ast, func) => {
-  switch (ast.ast) {
-    case 'BLOCK':
-      return func(Block(ast.elements.map(a => astMap(a, func))));
-    case 'ASSIGNMENT':
-      return func(Assignment(ast.identifier, astMap(ast.expression, func)));
-    case 'APPLICATION':
-      return func(
-        Application(
-          ast.identifier,
-          ast.args.map(a => astMap(a, func)),
-          mapMaybe(ast.block, func),
-          mapMaybe(ast.cache, func)
-        )
-      );
-    case 'IF':
-      return func(
-        If(
-          astMap(ast.predicate, func),
-          astMap(ast.ifBlock, func),
-          mapMaybe(ast.elseBlock, func)
-        )
-      );
-    case 'LAMBDA':
-      return func(
-        Lambda(ast.argNames.slice(), astMap(ast.body, func), ast.inlinable)
-      );
-    case 'TIMES':
-      return func(
-        Times(astMap(ast.number, func), astMap(ast.block, func), ast.loopVar)
-      );
-    case 'DOONCE':
-      return func(DoOnce(ast.active, astMap(ast.body, func)));
-    case 'UNARYOP':
-      return func(UnaryOp(ast.operator, astMap(ast.expr1, func)));
-    case 'BINARYOP':
-      return func(
-        BinaryOp(ast.operator, astMap(ast.expr1, func), astMap(ast.expr2, func))
-      );
-    case 'LIST':
-      return func(List(ast.values.map(as => astMap(as, func))));
-    case 'DEINDEX':
-      return func(
-        DeIndex(
-          ast.collection.map(as => astMap(as, func)),
-          astMap(ast.index, func)
-        )
-      );
-    default:
-      // Number, String, Variable, Comment
-      return func(ast);
-  }
+const defaultMapFunctions = {
+  BLOCK: (ast, func, state, mapFuncs) => {
+    return func(
+      Block(ast.elements.map(a => astTraverse(a, func, state, mapFuncs))),
+      func,
+      state,
+      mapFuncs
+    );
+  },
+  ASSIGNMENT: (ast, func, state, mapFuncs) => {
+    return func(
+      Assignment(
+        ast.identifier,
+        astTraverse(ast.expression, func, state, mapFuncs),
+        ast.stackPos
+      ),
+      func,
+      state,
+      mapFuncs
+    );
+  },
+  APPLICATION: (ast, func, state, mapFuncs) => {
+    return func(
+      Application(
+        ast.identifier,
+        ast.args.map(a => astTraverse(a, func, state, mapFuncs)),
+        ast.block ? astTraverse(ast.block, func, state, mapFuncs) : ast.block,
+        ast.cache ? astTraverse(ast.cache, func, state, mapFuncs) : ast.cache,
+        ast.argStackPositions
+      ),
+      func,
+      state
+    );
+  },
+  IF: (ast, func, state, mapFuncs) => {
+    return func(
+      If(
+        astTraverse(ast.predicate, func, state, mapFuncs),
+        astTraverse(ast.ifBlock, func, state, mapFuncs),
+        astTraverse(ast.elseBlock, func, state, mapFuncs)
+      ),
+      func,
+      state
+    );
+  },
+  LAMBDA: (ast, func, state, mapFuncs) => {
+    return func(
+      Lambda(
+        ast.argNames.slice(),
+        astTraverse(ast.body, func, state, mapFuncs),
+        ast.inlinable
+      ),
+      func,
+      state
+    );
+  },
+  TIMES: (ast, func, state, mapFuncs) => {
+    return func(
+      Times(
+        astTraverse(ast.number, func, state, mapFuncs),
+        astTraverse(ast.block, func, state, mapFuncs),
+        ast.loopVar
+      ),
+      astTraverse,
+      mapFuncs,
+      state
+    );
+  },
+  DOONCE: (ast, func, state, mapFuncs) => {
+    return func(
+      DoOnce(ast.active, astTraverse(ast.body, func, state, mapFuncs)),
+      func,
+      state
+    );
+  },
+  UNARYOP: (ast, func, state, mapFuncs) => {
+    return func(
+      UnaryOp(ast.operator, astTraverse(ast.expr1, func, state, mapFuncs)),
+      func,
+      state
+    );
+  },
+  BINARYOP: (ast, func, state, mapFuncs) => {
+    return func(
+      BinaryOp(
+        ast.operator,
+        astTraverse(ast.expr1, func, state, mapFuncs),
+        astTraverse(ast.expr2, func, state, mapFuncs)
+      ),
+      func,
+      state
+    );
+  },
+  LIST: (ast, func, state, mapFuncs) => {
+    return func(
+      List(ast.values.map(as => astTraverse(as, func, state, mapFuncs))),
+      func,
+      state
+    );
+  },
+  DEINDEX: (ast, func, state, mapFuncs) => {
+    return func(
+      DeIndex(
+        ast.collection.map(as => astTraverse(as, func, state, mapFuncs)),
+        astTraverse(ast.index, func, state, mapFuncs)
+      ),
+      func,
+      state
+    );
+  },
+  // Number, String, Variable, Comment
+  default: (ast, func, state, mapFuncs) => func(ast, func, state, mapFuncs)
 };
 
-export const astTransform = (ast, transMap = {}, state = {}) => {
-  const f = node => {
-    if (transMap[node.ast]) return transMap[node.ast](node, transMap, state);
-    if (transMap['default']) return transMap['default'](node, transMap, state);
-    return node;
-  };
-  return astMap(ast, f);
+export const astTraverse = (ast, func, state, mapFuncs) => {
+  if (mapFuncs[ast.ast]) return mapFuncs[ast.ast](ast, func, state, mapFuncs);
+  if (mapFuncs['default'])
+    return mapFuncs['default'](ast, func, state, mapFuncs);
+  return func(ast);
+};
+
+export const astMap = (ast, func) => {
+  const transMap = Object.assign({}, defaultMapFunctions);
+  return astTraverse(ast, func, {}, transMap);
+};
+
+export const astTransform = (ast, transformations = {}, state = {}) => {
+  const transMap = Object.assign({}, defaultMapFunctions, transformations);
+  return astTraverse(ast, a => a, state, transMap);
 };
