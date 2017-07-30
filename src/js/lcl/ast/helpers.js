@@ -10,7 +10,7 @@ import {
   BinaryOp,
   List,
   DeIndex
-} from './ast';
+} from './index';
 
 export const mapMaybe = (ast, func) => {
   if (ast) {

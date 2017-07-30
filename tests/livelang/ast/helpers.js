@@ -1,10 +1,10 @@
 /* global describe, it */
 
-import { Block, Assignment, BinaryOp, Num } from '../../src/js/lcl/ast';
+import { Block, Assignment, BinaryOp, Num } from '../../../src/js/lcl/ast';
 
 import * as assert from 'assert';
 
-import { astTransform } from '../../src/js/lcl/ast-funcs';
+import { astTransform } from '../../../src/js/lcl/ast/helpers';
 
 describe('AST Funcs', function() {
   it('simple transform', function() {

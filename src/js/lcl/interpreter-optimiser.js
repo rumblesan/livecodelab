@@ -1,4 +1,4 @@
-import { astTransform, isNull, notNull } from './ast-funcs';
+import { astTransform, isNull, notNull } from './ast/helpers';
 
 import {
   Block,
