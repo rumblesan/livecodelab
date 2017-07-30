@@ -76,8 +76,7 @@ describe('Lazy Lambda', function() {
           [],
           ast.Block([ast.Application('scale', [ast.Num(1.1)], null)]),
           true
-        ),
-        true
+        )
       ),
       ast.Application(
         'rotate',
