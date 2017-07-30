@@ -12,11 +12,12 @@ export const Block = function(elements) {
  *  identifier: Identifier
  *  expression: Expression
  */
-export const Assignment = function(identifier, expression) {
+export const Assignment = function(identifier, expression, stackPos = null) {
   return {
     ast: 'ASSIGNMENT',
     identifier: identifier,
-    expression: expression
+    expression: expression,
+    stackPos: stackPos
   };
 };
 
@@ -24,13 +25,20 @@ export const Assignment = function(identifier, expression) {
  *  identifier: Identifier
  *  args:       [Expression]
  */
-export const Application = function(identifier, args, block, cache = null) {
+export const Application = function(
+  identifier,
+  args,
+  block = null,
+  cache = null,
+  argStackPositions = null
+) {
   return {
     ast: 'APPLICATION',
     identifier: identifier,
     args: args,
     block: block,
-    cache: cache
+    cache: cache,
+    argStackPositions: argStackPositions
   };
 };
 
@@ -138,10 +146,11 @@ export const Num = function(value) {
 /**
  *  value: Identifier
  */
-export const Variable = function(identifier) {
+export const Variable = function(identifier, stackPos = null) {
   return {
     ast: 'VARIABLE',
-    identifier: identifier
+    identifier: identifier,
+    stackPos: stackPos
   };
 };
 

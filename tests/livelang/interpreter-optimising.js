@@ -21,7 +21,8 @@ import * as assert from 'assert';
 import {
   astCopy,
   functionCacher,
-  deadCodeEliminator
+  deadCodeEliminator,
+  argFlattener
 } from '../../src/js/lcl/interpreter-optimiser';
 
 describe('Optimiser', function() {
@@ -183,5 +184,157 @@ describe('Optimiser', function() {
 
     assert.deepEqual(parsed, initialAst);
     assert.deepEqual(inlinedAst, expectedInlined);
+  });
+
+  it('basic arg flattening', function() {
+    const program = dedent(`
+                           foo = (a) => 255 * a
+                           foo 1
+                           `);
+    const parsed = parse(program);
+    const initialAst = Block([
+      Assignment('foo', Lambda(['a'], BinaryOp('*', Num(255), Variable('a')))),
+      Application('foo', [Num(1)], null)
+    ]);
+
+    assert.deepEqual(parsed, initialAst);
+
+    const inlinedAst = deadCodeEliminator(functionCacher(parsed, {}));
+    const expectedInlined = Block([
+      Application(
+        'foo',
+        [Num(1)],
+        null,
+        Lambda(['a'], BinaryOp('*', Num(255), Variable('a')))
+      )
+    ]);
+
+    assert.deepEqual(inlinedAst, expectedInlined);
+
+    const argFlattenedAst = argFlattener(inlinedAst);
+    const expectedArgFlattened = Block([
+      Application(
+        'foo',
+        [Num(1)],
+        null,
+        Lambda(['a'], BinaryOp('*', Num(255), Variable('a', 0))),
+        [0]
+      )
+    ]);
+
+    assert.deepEqual(argFlattenedAst, expectedArgFlattened);
+  });
+
+  it('complex arg flattening', function() {
+    const program = dedent(`
+                           d = 7
+                           foo = (a, b) => b * a
+                           bar = (x) => foo x, 3
+                           bar d
+                           `);
+    const parsed = parse(program);
+    const initialAst = Block([
+      Assignment('d', Num(7)),
+      Assignment(
+        'foo',
+        Lambda(['a', 'b'], BinaryOp('*', Variable('b'), Variable('a')))
+      ),
+      Assignment(
+        'bar',
+        Lambda(['x'], Application('foo', [Variable('x'), Num(3)]))
+      ),
+      Application('bar', [Variable('d')])
+    ]);
+
+    const cached = functionCacher(parsed, {});
+    const inlinedAst = deadCodeEliminator(cached);
+    const expectedInlined = Block([
+      Assignment('d', Num(7)),
+      Application(
+        'bar',
+        [Variable('d')],
+        null,
+        Lambda(
+          ['x'],
+          Application(
+            'foo',
+            [Variable('x'), Num(3)],
+            null,
+            Lambda(['a', 'b'], BinaryOp('*', Variable('b'), Variable('a')))
+          )
+        )
+      )
+    ]);
+
+    const argFlattenedAst = argFlattener(inlinedAst);
+    // d: 0, x: 1, a: 2, b: 3
+    const expectedArgFlattened = Block([
+      Assignment('d', Num(7), 0),
+      Application(
+        'bar',
+        [Variable('d', 0)],
+        null,
+        Lambda(
+          ['x'],
+          Application(
+            'foo',
+            [Variable('x', 1), Num(3)],
+            null,
+            Lambda(
+              ['a', 'b'],
+              BinaryOp('*', Variable('b', 3), Variable('a', 2))
+            ),
+            [2, 3]
+          )
+        ),
+        [1]
+      )
+    ]);
+
+    assert.deepEqual(parsed, initialAst);
+    assert.deepEqual(inlinedAst, expectedInlined);
+    assert.deepEqual(argFlattenedAst, expectedArgFlattened);
+  });
+
+  it('complex arg flattening with prior values', function() {
+    const program = dedent(`
+                           foo = (a, b) => b * a
+                           d = pi
+                           bar = (x) => foo x, time
+                           bar d
+                           `);
+    const flattenerState = {
+      variables: ['time', 'pi'],
+      lookup: { time: 0, pi: 1 }
+    };
+    const argFlattenedAst = argFlattener(
+      deadCodeEliminator(functionCacher(parse(program), {})),
+      flattenerState
+    );
+    // time: 0, pi: 1, d: 2, x: 3, a: 4, b: 5
+    const expectedArgFlattened = Block([
+      Assignment('d', Variable('pi', 1), 2),
+      Application(
+        'bar',
+        [Variable('d', 2)],
+        null,
+        Lambda(
+          ['x'],
+          Application(
+            'foo',
+            [Variable('x', 3), Variable('time', 0)],
+            null,
+            Lambda(
+              ['a', 'b'],
+              BinaryOp('*', Variable('b', 5), Variable('a', 4))
+            ),
+            [4, 5]
+          )
+        ),
+        [3]
+      )
+    ]);
+
+    assert.deepEqual(argFlattenedAst, expectedArgFlattened);
   });
 });

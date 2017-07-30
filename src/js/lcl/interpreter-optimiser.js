@@ -1,4 +1,4 @@
-import { astTransform, isNull, notNull } from './ast/helpers';
+import { astMap, astTransform, isNull, notNull } from './ast/helpers';
 
 import {
   Block,
@@ -11,24 +11,27 @@ import {
   UnaryOp,
   BinaryOp,
   List,
+  Variable,
   Null
 } from './ast';
 
 import { createChildScope } from './interpreter-funcs';
 
-export const astCopy = ast => astTransform(ast);
+export const astCopy = ast => astMap(ast, a => a);
 
-export const functionCacher = (ast, state = {}) => {
+export const functionCacher = (ast, initialState = {}) => {
   return astTransform(
     ast,
     {
-      BLOCK: ast => {
+      BLOCK: (ast, func, state) => {
         const childFunctionScope = createChildScope(state);
         return Block(
-          ast.elements.map(el => functionCacher(el, childFunctionScope))
+          ast.elements.map(el => {
+            return functionCacher(el, childFunctionScope);
+          })
         );
       },
-      ASSIGNMENT: ast => {
+      ASSIGNMENT: (ast, func, state) => {
         const expr = functionCacher(ast.expression, state);
         if (expr.ast === 'LAMBDA') {
           state[ast.identifier] = expr;
@@ -36,7 +39,7 @@ export const functionCacher = (ast, state = {}) => {
         }
         return Assignment(ast.identifier, expr);
       },
-      APPLICATION: ast => {
+      APPLICATION: (ast, func, state) => {
         const cache = state[ast.identifier]
           ? astCopy(state[ast.identifier])
           : ast.cache;
@@ -48,7 +51,7 @@ export const functionCacher = (ast, state = {}) => {
         );
       }
     },
-    state
+    initialState
   );
 };
 
@@ -105,6 +108,51 @@ export const deadCodeEliminator = ast =>
     NUMBER: ast => ast
   });
 
-export const scopeInliner = ast => {
-  return ast;
-};
+export const argFlattener = (
+  ast,
+  initialState = {
+    variables: [],
+    lookup: {}
+  }
+) =>
+  astTransform(
+    ast,
+    {
+      VARIABLE: (ast, func, state) => {
+        const stackPos = state.lookup[ast.identifier];
+        return Variable(ast.identifier, stackPos);
+      },
+      ASSIGNMENT: (ast, func, state) => {
+        const expr = argFlattener(ast.expression, state);
+        let stackPos = state.lookup[ast.identifier];
+        // if there isn't a value already defined for this variable
+        // then create a new entry
+        if (!stackPos) {
+          // subtract 1 because we want the position of the element
+          stackPos = state.variables.push(ast.identifier) - 1;
+          state.lookup[ast.identifier] = stackPos;
+        }
+        return Assignment(ast.identifier, expr, stackPos);
+      },
+      APPLICATION: (ast, func, state) => {
+        // Assuming functions have already been flattened and cached
+        const argStackPositions = ast.cache.argNames.map(name => {
+          let stackPos = state.lookup[name];
+          if (!stackPos) {
+            // subtract 1 because we want the position of the element
+            stackPos = state.variables.push(name) - 1;
+            state.lookup[name] = stackPos;
+          }
+          return stackPos;
+        });
+        return Application(
+          ast.identifier,
+          ast.args.map(arg => argFlattener(arg, state)),
+          ast.block ? argFlattener(ast.block, state) : ast.block,
+          argFlattener(ast.cache, state),
+          argStackPositions
+        );
+      }
+    },
+    initialState
+  );
