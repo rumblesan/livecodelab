@@ -12,11 +12,17 @@ export const Block = function(elements) {
  *  identifier: Identifier
  *  expression: Expression
  */
-export const Assignment = function(identifier, expression, stackPos = null) {
+export const Assignment = function(
+  identifier,
+  expression,
+  stackPos = null,
+  local = false
+) {
   return {
     ast: 'ASSIGNMENT',
     identifier: identifier,
     expression: expression,
+    local: local,
     stackPos: stackPos
   };
 };
@@ -146,10 +152,11 @@ export const Num = function(value) {
 /**
  *  value: Identifier
  */
-export const Variable = function(identifier, stackPos = null) {
+export const Variable = function(identifier, stackPos = null, local = false) {
   return {
     ast: 'VARIABLE',
     identifier: identifier,
+    local: local,
     stackPos: stackPos
   };
 };

@@ -156,3 +156,52 @@ export const argFlattener = (
     },
     initialState
   );
+
+export const localVariableOptimiser = (
+  ast,
+  initialState = {
+    variables: [],
+    lookup: {}
+  }
+) =>
+  astTransform(
+    ast,
+    {
+      VARIABLE: (ast, func, localScope) => {
+        const offset = localScope.lookup[ast.identifier];
+        if (offset !== undefined && offset !== null) {
+          return Variable(ast.identifier, offset, true);
+        }
+        return Variable(ast.identifier, ast.stackPos, ast.local);
+      },
+      ASSIGNMENT: (ast, func, localScope) => {
+        const expr = localVariableOptimiser(ast.expression, localScope);
+        let offset = localScope.lookup[ast.identifier];
+        // if there isn't a value already defined for this variable
+        // then create a new entry
+        if (!offset) {
+          // subtract 1 because we want the position of the element
+          offset = localScope.variables.push(ast.identifier) - 1;
+          localScope.lookup[ast.identifier] = offset;
+          return Assignment(ast.identifier, expr, offset, true);
+        }
+        return Assignment(ast.identifier, ast.expr, offset, ast.local);
+      },
+      LAMBDA: ast => {
+        // Assuming functions have already been flattened and cached
+        const localScope = {
+          variables: [],
+          lookup: {}
+        };
+        ast.argNames.forEach(name => {
+          // subtract 1 because we want the position of the element
+          let offset = localScope.variables.push(name) - 1;
+          localScope.lookup[name] = offset;
+        });
+
+        const body = localVariableOptimiser(ast.body, localScope);
+        return Lambda(ast.argNames.slice(), body, ast.inlinable);
+      }
+    },
+    initialState
+  );

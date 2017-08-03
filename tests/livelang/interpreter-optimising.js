@@ -22,7 +22,8 @@ import {
   astCopy,
   functionCacher,
   deadCodeEliminator,
-  argFlattener
+  argFlattener,
+  localVariableOptimiser
 } from '../../src/js/lcl/interpreter-optimiser';
 
 describe('Optimiser', function() {
@@ -33,7 +34,9 @@ describe('Optimiser', function() {
         'bar',
         Lambda(
           ['b'],
-          BinaryOp('*', Variable('b'), Application('foo', [Num(7)], null))
+          Block([
+            BinaryOp('*', Variable('b'), Application('foo', [Num(7)], null))
+          ])
         )
       ),
       Assignment('baz', Application('bar', [Num(1)], null))
@@ -336,5 +339,53 @@ describe('Optimiser', function() {
     ]);
 
     assert.deepEqual(argFlattenedAst, expectedArgFlattened);
+  });
+
+  it('local variable optimiser', function() {
+    const program = dedent(`
+                            foo = (b, a) =>
+                            \tbox a, b, time
+                            foo 1, 2
+                           `);
+
+    const parsed = parse(program, {
+      functionNames: ['box']
+    });
+
+    const initialAst = Block([
+      Assignment(
+        'foo',
+        Lambda(
+          ['b', 'a'],
+          Block([
+            Application('box', [Variable('a'), Variable('b'), Variable('time')])
+          ])
+        )
+      ),
+      Application('foo', [Num(1), Num(2)], null)
+    ]);
+
+    const optimisedAst = localVariableOptimiser(parsed);
+    const expectedOptimised = Block([
+      Assignment(
+        'foo',
+        Lambda(
+          ['b', 'a'],
+          Block([
+            Application('box', [
+              Variable('a', 1, true),
+              Variable('b', 0, true),
+              Variable('time')
+            ])
+          ])
+        ),
+        0,
+        true
+      ),
+      Application('foo', [Num(1), Num(2)], null)
+    ]);
+
+    assert.deepEqual(parsed, initialAst);
+    assert.deepEqual(optimisedAst, expectedOptimised);
   });
 });
