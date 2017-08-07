@@ -51,8 +51,7 @@ export const defaultTraverseFunctions = {
     return Application(
       ast.identifier,
       ast.args.map(a => astTraverse(a, transFuncs, state)),
-      astTraverse(ast.block, transFuncs, state),
-      astTraverse(ast.cache, transFuncs, state)
+      astTraverse(ast.block, transFuncs, state)
     );
   },
   [IF]: (ast, transFuncs, state) => {
