@@ -7,7 +7,7 @@ import {
   Assignment,
   BinaryOp,
   Block,
-  Closure,
+  Lambda,
   Num,
   Variable
 } from '../../src/js/lcl/ast';
@@ -106,10 +106,10 @@ describe('Interpreter', function() {
     );
 
     var expected = Block([
-      Assignment('a', Closure(['x'], BinaryOp('*', Variable('x'), Num(2)))),
+      Assignment('a', Lambda(['x'], BinaryOp('*', Variable('x'), Num(2)))),
       Assignment(
         'b',
-        Closure(['x', 'y'], BinaryOp('+', Variable('x'), Variable('y')))
+        Lambda(['x', 'y'], BinaryOp('+', Variable('x'), Variable('y')))
       ),
       Application('result', [
         BinaryOp(

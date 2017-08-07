@@ -4,7 +4,7 @@ import {
   Assignment,
   Application,
   If,
-  Closure,
+  Lambda,
   Times,
   DoOnce,
   UnaryOp,
@@ -22,7 +22,7 @@ import {
   ASSIGNMENT,
   APPLICATION,
   IF,
-  CLOSURE,
+  LAMBDA,
   TIMES,
   DOONCE,
   UNARYOP,
@@ -62,8 +62,8 @@ export const defaultTraverseFunctions = {
       astTraverse(ast.elseBlock, transFuncs, state)
     );
   },
-  [CLOSURE]: (ast, transFuncs, state) => {
-    return Closure(
+  [LAMBDA]: (ast, transFuncs, state) => {
+    return Lambda(
       ast.argNames.slice(),
       astTraverse(ast.body, transFuncs, state),
       ast.inlinable

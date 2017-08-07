@@ -6,7 +6,7 @@ import {
   Assignment,
   BinaryOp,
   Block,
-  Closure,
+  Lambda,
   If,
   Num,
   Variable
@@ -24,7 +24,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure(['a'], BinaryOp('+', Variable('a'), Num(1)), false)
+        Lambda(['a'], BinaryOp('+', Variable('a'), Num(1)), false)
       )
     ]);
 
@@ -40,7 +40,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure(['a', 'b'], BinaryOp('+', Variable('a'), Variable('b')), false)
+        Lambda(['a', 'b'], BinaryOp('+', Variable('a'), Variable('b')), false)
       )
     ]);
 
@@ -61,7 +61,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure([], BinaryOp('*', Num(255), Application('random', [])), false)
+        Lambda([], BinaryOp('*', Num(255), Application('random', [])), false)
       ),
       Application('fill', [Application('foo', [])]),
       Application('box', [])
@@ -108,7 +108,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'bar',
-        Closure(
+        Lambda(
           ['a', 'b'],
           Block([
             Assignment('c', BinaryOp('+', Variable('a'), Variable('b'))),
@@ -138,7 +138,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'bar',
-        Closure(
+        Lambda(
           ['a', 'b'],
           Block([
             If(
@@ -165,7 +165,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure(['a'], BinaryOp('+', Variable('a'), Num(3)), false)
+        Lambda(['a'], BinaryOp('+', Variable('a'), Num(3)), false)
       ),
       Assignment(
         'bar',
@@ -188,7 +188,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure(['a', 'b'], BinaryOp('+', Variable('a'), Variable('b')), false)
+        Lambda(['a', 'b'], BinaryOp('+', Variable('a'), Variable('b')), false)
       ),
       Assignment(
         'bar',
@@ -211,7 +211,7 @@ describe('Function', function() {
     var expected = Block([
       Assignment(
         'foo',
-        Closure(
+        Lambda(
           ['x', 'y', 'j', 'z'],
           BinaryOp(
             '*',

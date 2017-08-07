@@ -4,7 +4,7 @@ import {
   ASSIGNMENT,
   APPLICATION,
   IF,
-  CLOSURE,
+  LAMBDA,
   TIMES,
   DOONCE,
   UNARYOP,
@@ -78,9 +78,9 @@ export function If(predicate, ifBlock, elseBlock = Null()) {
  *  body:      Block
  *  inlinable: Boolean
  */
-export function Closure(argNames, body, inlinable = false) {
+export function Lambda(argNames, body, inlinable = false) {
   return {
-    type: CLOSURE,
+    type: LAMBDA,
     argNames,
     body,
     inlinable

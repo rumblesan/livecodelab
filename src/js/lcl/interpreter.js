@@ -6,7 +6,7 @@ import {
   ASSIGNMENT,
   APPLICATION,
   IF,
-  CLOSURE,
+  LAMBDA,
   TIMES,
   DOONCE,
   UNARYOP,
@@ -63,8 +63,8 @@ internal.evaluate = function(state, node, scope) {
       output = internal.evaluateIf(state, node, scope);
       break;
 
-    case CLOSURE:
-      output = internal.evaluateClosure(state, node, scope);
+    case LAMBDA:
+      output = internal.evaluateLambda(state, node, scope);
       break;
 
     case TIMES:
@@ -157,7 +157,7 @@ internal.evaluateApplication = function(state, application, scope) {
   }
 
   // functions are wrapped in an object with a function type
-  // to differentiate between builtins and closures
+  // to differentiate between builtins and lambdas
   // user defined functions will be wrapped in a list so we unwrap them then call them
   if (func.type === 'builtin') {
     // apply is a method of the JS function object. it takes a scope
@@ -173,11 +173,11 @@ internal.evaluateApplication = function(state, application, scope) {
     // bar will equal 5
 
     output = func.func.apply(scope, evaledargs);
-  } else if (func.type === 'closure') {
+  } else if (func.type === 'lambda') {
     // Functions defined by the user are wrapped in a list, so we need
     // to unwrap them
     // Also we don't pass the scope in because everything is created
-    // as a closure
+    // as a lambda
     output = func.func(evaledargs);
   } else {
     throw 'Error interpreting function: ' + funcname;
@@ -200,10 +200,10 @@ internal.evaluateIf = function(state, ifStatement, scope) {
   }
 };
 
-internal.evaluateClosure = function(state, closure, scope) {
+internal.evaluateLambda = function(state, lambda, scope) {
   var argnames, body, func;
-  argnames = closure.argNames;
-  body = closure.body;
+  argnames = lambda.argNames;
+  body = lambda.body;
 
   func = function(argvalues) {
     var i, childScope, output;
@@ -216,9 +216,9 @@ internal.evaluateClosure = function(state, closure, scope) {
   };
 
   // Return the function wrapped in an object with the function
-  // type set to be closure
+  // type set to be lambda
   return {
-    type: 'closure',
+    type: 'lambda',
     func: func
   };
 };
