@@ -1,7 +1,7 @@
 /* global describe, it */
 
 import { Block, Assignment, BinaryOp, Num } from '../../../src/js/lcl/ast';
-import { NUM } from '../../../src/js/lcl/ast/types';
+import { NUMBER } from '../../../src/js/lcl/ast/types';
 
 import * as assert from 'assert';
 
@@ -33,7 +33,7 @@ describe('AST Funcs', function() {
     ]);
 
     const transformed = astTransform(initialAst, {
-      [NUM]: ast => Num(ast.value * 2)
+      [NUMBER]: ast => Num(ast.value * 2)
     });
 
     assert.deepEqual(transformed, expected);

@@ -12,7 +12,7 @@ import {
   UNARYOP,
   BINARYOP,
   DEINDEX,
-  NUM,
+  NUMBER,
   VARIABLE,
   STRING,
   LIST
@@ -83,7 +83,7 @@ internal.evaluate = function(state, node, scope) {
       output = internal.evaluateUnaryOp(state, node, scope);
       break;
 
-    case NUM:
+    case NUMBER:
       output = node.value;
       break;
 

@@ -28,7 +28,7 @@ import {
   UNARYOP,
   BINARYOP,
   DEINDEX,
-  NUM,
+  NUMBER,
   VARIABLE,
   STRING,
   LIST
@@ -92,7 +92,7 @@ export const defaultTraverseFunctions = {
   [LIST]: (ast, transFuncs, state) => {
     return List(ast.values.map(as => astTraverse(as, transFuncs, state)));
   },
-  [NUM]: ast => {
+  [NUMBER]: ast => {
     return Num(ast.value);
   },
   [VARIABLE]: ast => {

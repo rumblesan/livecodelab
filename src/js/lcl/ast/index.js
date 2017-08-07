@@ -10,7 +10,7 @@ import {
   UNARYOP,
   BINARYOP,
   DEINDEX,
-  NUM,
+  NUMBER,
   VARIABLE,
   STRING,
   LIST
@@ -155,7 +155,7 @@ export function DeIndex(collection, index) {
  */
 export function Num(value) {
   return {
-    type: NUM,
+    type: NUMBER,
     value
   };
 }
