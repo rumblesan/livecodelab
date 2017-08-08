@@ -78,12 +78,13 @@ export function If(predicate, ifBlock, elseBlock = Null()) {
  *  body:      Block
  *  inlinable: Boolean
  */
-export function Lambda(argNames, body, inlinable = false) {
+export function Lambda(argNames, body, inlinable = false, freeVars = []) {
   return {
     type: LAMBDA,
     argNames,
     body,
-    inlinable
+    inlinable,
+    freeVars
   };
 }
 
